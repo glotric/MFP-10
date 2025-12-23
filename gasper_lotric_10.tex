@@ -1,0 +1,305 @@
+\documentclass[a4paper, 12pt, slovene]{article}
+\usepackage[slovene]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{caption}
+\captionsetup{font=footnotesize}
+\usepackage{fullpage}
+\usepackage{enumitem}
+\usepackage{array}
+\usepackage{wrapfig}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{subcaption}
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+\newcommand*\Diff[1]{\mathop{}\!\mathrm{d^#1}}
+\newcommand*\difft{\mathop{}\!\ddot{ }}
+\usepackage{float}
+\usepackage{mathrsfs}
+\usepackage{fancyvrb}
+
+
+\newcommand{\Ai}{\mathrm{Ai}}
+\newcommand{\Bi}{\mathrm{Bi}}
+
+\renewcommand{\Re}{\mathop{\rm Re}\nolimits}
+\renewcommand{\Im}{\mathop{\rm Im}\nolimits}
+\newcommand{\Tr}{\mathop{\rm Tr}\nolimits}
+\newcommand{\diag}{\mathop{\rm diag}\nolimits}
+\newcommand{\dd}{\,\mathrm{d}}
+\newcommand{\ddd}{\mathrm{d}}
+\newcommand{\ii}{\mathrm{i}}
+\newcommand{\lag}{\mathcal{L}\!}
+\newcommand{\ham}{\mathcal{H}\!}
+\newcommand{\four}[1]{\mathcal{F}\!\left(#1\right)}
+\newcommand{\bigO}[1]{\mathcal{O}\!\left(#1\right)}
+\newcommand{\sh}{\mathop{\rm sinh}\nolimits}
+\newcommand{\ch}{\mathop{\rm cosh}\nolimits}
+\renewcommand{\th}{\mathop{\rm tanh}\nolimits}
+\newcommand{\erf}{\mathop{\rm erf}\nolimits}
+\newcommand{\erfc}{\mathop{\rm erfc}\nolimits}
+\newcommand{\sinc}{\mathop{\rm sinc}\nolimits}
+\newcommand{\rect}{\mathop{\rm rect}\nolimits}
+\newcommand{\ee}[1]{\cdot 10^{#1}}
+\newcommand{\inv}[1]{\left(#1\right)^{-1}}
+\newcommand{\invf}[1]{\frac{1}{#1}}
+\newcommand{\sqr}[1]{\left(#1\right)^2}
+\newcommand{\half}{\frac{1}{2}}
+\newcommand{\thalf}{\tfrac{1}{2}}
+\newcommand{\pd}{\partial}
+\newcommand{\Dd}[3][{}]{\frac{\ddd^{#1} #2}{\ddd #3^{#1}}}
+\newcommand{\Pd}[3][{}]{\frac{\pd^{#1} #2}{\pd #3^{#1}}}
+\newcommand{\avg}[1]{\left\langle#1\right\rangle}
+\newcommand{\norm}[1]{\left\Vert #1 \right\Vert}
+\newcommand{\braket}[2]{\left\langle #1 \vert#2 \right\rangle}
+\newcommand{\obraket}[3]{\left\langle #1 \vert #2 \vert #3 \right \rangle}
+\newcommand{\hex}[1]{\texttt{0x#1}}
+
+\renewcommand{\iint}{\mathop{\int\mkern-13mu\int}}
+\renewcommand{\iiint}{\mathop{\int\mkern-13mu\int\mkern-13mu\int}}
+\newcommand{\oiint}{\mathop{{\int\mkern-15mu\int}\mkern-21mu\raisebox{0.3ex}{$\bigcirc$}}}
+
+\newcommand{\wunderbrace}[2]{\vphantom{#1}\smash{\underbrace{#1}_{#2}}}
+
+\renewcommand{\vec}[1]{\overset{\smash{\hbox{\raise -0.42ex\hbox{$\scriptscriptstyle\rightharpoonup$}}}}{#1}}
+\newcommand{\bec}[1]{\mathbf{#1}}
+
+\newcommand{\bi}[1]{\hbox{\boldmath{$#1$}}}
+\newcommand{\bm}[1]{\hbox{\underline{$#1$}}}
+
+\catcode`_=12
+\begingroup\lccode`~=`_\lowercase{\endgroup\let~\sb}
+\mathcode`_="8000
+
+
+\begin{document}
+
+\begin{titlepage}
+\title{\textsc{Diferenčne metode za PDE} \\[1ex] \large Deseta naloga pri predmetu Matematično-fizikalni praktikum}
+\author{Gašper Lotrič, 28191019}
+\date{13. januar 2022}
+
+\maketitle
+\end{titlepage}
+
+\tableofcontents
+\pagebreak
+
+
+\section{Uvod}
+Enorazsežna nestacionarna Sch\"odingerjeva enačba
+\begin{equation*}
+  \left(i\hbar\Pd{}{t}-H\right)\psi(x,t)=0
+\end{equation*}
+je osnovno orodje za nerelativistični opis časovnega razvoja kvantnih stanj v različnih potencialih. Tu obravnavamo samo od časa neodvisne hamiltonske operatorje
+\begin{equation*}
+  H=-\frac{\hbar^2}{2m}\Pd[2]{}{x}+V(x)\>.
+\end{equation*}
+Z menjavo spremenljivk $H/\hbar\mapsto H$, $x\sqrt{m/\hbar}\mapsto x$ in $V(x\sqrt{m/\hbar})/\hbar\mapsto V(x)$, efektivno postavimo $\hbar=m=1$,
+\begin{equation}
+  H=-\frac12\Pd[2]{}{x}+V(x)\>.
+  \label{eq:hamilton}
+\end{equation}
+
+
+Razvoj stanja $\psi(x,t)$ v stanje $\psi(x,t+\Delta t)$ opišemo s približkom
+\begin{equation}
+  \psi(x,t+\Delta t)=e^{-\ii H \Delta t} \psi(x,t)\approx \frac{1-\thalf \ii H \Delta t}{1+\thalf \ii H \Delta t}\psi(x,t)\>,
+  \label{eq:razvoj}
+\end{equation}
+ki je unitaren in je reda $\mathcal{O}(\Delta t^3)$. Območje $a\leq x\leq b$ diskretiziramo na krajevno mrežo $x_j=a+j\Delta x$ pri $0\leq j<N$, $\Delta x = (b-a)/(N-1)$, časovni razvoj pa spremljamo ob časih $t_n=n\Delta t$. Vrednosti valovne funkcije in potenciala v mrežnih točkah ob času $t_n$ označimo $\psi(x_j,t_n)=\psi_j^n$ oziroma $V(x_j)=V_j$. Krajevni odvod izrazimo z diferenco
+\begin{equation*}
+  \Psi''(x)\approx \frac{\psi(x+\Delta x,t)-2\psi(x,t)+\psi(x-\Delta x,t)}{\Delta x^2}=\frac{\psi_{j+1}^n - 2\psi_j^n+\psi_{j-1}^n}{\Delta x^2}\>.
+\end{equation*}
+Ko te približke vstavimo v enačbo (\ref{eq:razvoj}) in razpišemo Hamiltonov operator po enačbi (\ref{eq:hamilton}), dobimo sistem enačb
+\begin{equation*}
+  \psi_j^{n+1}-\ii\frac{\Delta t}{4\Delta x^2}\left[\psi_{j+1}^{n+1}-2\psi_j^{n+1}+\psi_{j-1}^{n+1}\right] + \ii\frac{\Delta t}{2}V_j \psi_j^{n+1}=  \psi_j^{n}+\ii\frac{\Delta t}{4\Delta x^2}\left[\psi_{j+1}^{n}-2\psi_j^{n}+\psi_{j-1}^{n}\right] - \ii\frac{\Delta t}{2}V_j \psi_j^{n}\>,
+\end{equation*}
+v notranjih točkah mreže, medtem ko na robu ($j\leq 0$ in $j\geq N$) postavimo $\psi_j^n=0$. Vrednosti valovne funkcije v točkah $x_j$ uredimo v vektor
+\begin{equation*}
+\boldsymbol{\Psi}^n=(\psi_1^n,\ldots,\psi_{N-1}^n)^T
+\end{equation*}
+in sistem prepišemo v matrično obliko
+\begin{equation*}
+  \mathsf{A}\boldsymbol{\Psi}^{n+1}=\mathsf{A}^\ast \boldsymbol{\Psi}^n,\qquad
+  \mathsf{A}=\begin{pmatrix}
+  d_1 & a \\
+  a   & d_2 & a \\
+  & a & d_3 & a \\
+  & & \ddots & \ddots & \ddots \\
+  & & & a & d_{N-2} & a \\
+  & & & & a & d_{N-1}
+  \end{pmatrix}\>,
+\end{equation*}
+kjer je
+\begin{equation*}
+  b=\ii \frac{\Delta t}{2 \Delta x^2},\qquad a=-\frac{b}{2},\qquad d_j = 1+b+\ii \frac{\Delta t}{2}V_j\>.
+\end{equation*}
+Dobili smo torej matrični sistem, ki ga moramo rešiti v vsakem časovnem koraku, da iz stanja $\boldsymbol{\Psi}^n$ dobimo stanje $\boldsymbol{\Psi}^{n+1}$. Matrika $\mathsf{A}$ in vektor $\boldsymbol{\Psi}$ imata kompleksne elemente, zato račun najlažje opraviš v kompleksni aritmetiki\footnote{
+  {\tt \#include <complex.h>} v {\tt c}, {\tt \#include <complex>} v {\tt c++}, {\tt from cmath import *} za kompleksne funkcije v Pythonu (sama kompleksna aritmetika pa je vgrajena).
+}.
+
+
+\subsection{Naloga}
+Spremljaj časovni razvoj začetnega stanja
+\begin{equation*}
+  \Psi(x,0)=\sqrt{\frac{\alpha}{\sqrt{\pi}}} e^{-\alpha^2 (x-\lambda)^2/2}
+\end{equation*}
+v harmonskem potencialu $V(x)=\frac12 kx^2$, kjer je v naravnih enotah $\alpha=k^{1/4}$, $\omega=\sqrt{k}$. Analitična rešitev je koherentno stanje
+\begin{equation*}
+  \psi(x,t)=\sqrt{\frac{\alpha}{\sqrt{\pi}}} \exp\left[-\frac12 \left(\xi-\xi_\lambda \cos\omega t\right)^2 - \ii \left(\frac{\omega t}{2}+\xi\xi_\lambda \sin\omega t - \frac14 \xi_\lambda^2 \sin 2 \omega t\right)\right]\>,
+\end{equation*}
+kjer je $\xi=\alpha x$, $\xi_\lambda=\alpha \lambda$. Postavi parametre na $\omega=0.2$, $\lambda=10$. Krajevno mrežo vpni v interval $[a,b]=[-40,40]$ z $N=300$ aktivnimi točkami. Nihajni čas je $T=2\pi/\omega$ -- primerno prilagodi časovni korak $\Delta t$ in stanje opazuj deset period.
+
+Opazuj še razvoj gaussovskega valovnega paketa
+\begin{equation*}
+  \psi(x,0)=(2\pi \sigma_0^2)^{-1/4} e^{\ii k_0(x-\lambda)}e^{-(x-\lambda)^2/(2\sigma_0)^2}
+\end{equation*}
+v prostoru brez potenciala. Postavi $\sigma_0=1/20$, $k_0=50\pi$, $\lambda=0.25$ in območje $[a,b]=[-0.5,1.5]$ ter $\Delta t=2\Delta x^2$. Časovni razvoj spremljaj, dokler težišče paketa ne pride do $x\approx 0.75$. Analitična rešitev je
+\begin{equation*}
+  \psi(x,t)=\frac{(2\pi \sigma_0^2)^{-1/4}}{\sqrt{1+\ii t/(2\sigma_0^2)}} \exp\left[
+    \frac{-(x-\lambda)^2/(2\sigma_0)^2+\ii k_0(x-\lambda)-\ii k_0^2 t/2}{1+\ii t/(2\sigma_0^2)}
+    \right]
+\end{equation*}
+
+
+\subsection{Dodatna naloga}
+Z uporabljenim približkom za drugi odvod reda $\mathcal{O}(\Delta x^2)$ dobimo tridiagonalno matriko. Z diferencami višjih redov dobimio večdiagonalno (pasovno) matriko, a dosežemo tudi večjo krajevno natančnost. Diference višjih redov lahko hitro izračunaš na primer v Mathematici s funkcijo
+\begin{center}
+  \tt FD[m_,n_,s_] := CoefficientList[Normal[Series[x\string^s Log[x]\string^m, \{x, 1, n\}]/h\string^m], x];
+\end{center}
+kjer je {\tt m} red diference (odvoda), {\tt n} število intervalov širine $h=\Delta x$, ki jih diferenca upošteva, in {\tt s} število intervalov med točko, kjer diferenco računamo, in skrajno levo točko diferenčne sheme. Zgornjo tritočkovno sheme za drugo diferenco dobimo kot {\tt FD[2, 2, 1]}, saj se razpenja čez {\tt n=2} intervala, sredinska točka pa je v točki z indeksom {\tt s=1}.
+
+Tudi korakanje v času je mogoče izboljšati z uporabo Pad\'ejeve aproksimacije za eksponentno funkcijo, glej \cite{dijk} in/ali predavanja.
+
+
+
+\section{Razvoj koherentnega stanja}
+V prvem delu naloge bom opazoval časovni razvoj koherentnega začetnega stanja v harmonskem potenicalu. Parametre sem nastavil kot jih priporoča navodilo, da se lepo vidi časovno dogajanje. Primerjal sem diferenčno metodo (slika \ref{f:razvoj-num}) z analitično rešitvijo problema (slika \ref{f:razvoj-ana}).
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.495\textwidth}
+	\centering
+	\includegraphics[width=0.95\textwidth]{grafi/analiticna-casovni-razvoj.pdf}
+	\caption{Analitična metoda.}
+	\label{f:razvoj-ana}
+\end{subfigure}
+\begin{subfigure}{0.495\textwidth}
+	\centering
+	\includegraphics[width=0.95\textwidth]{grafi/num-casovni-razvoj.pdf}
+	\caption{Numerična metoda.}
+	\label{f:razvoj-num}
+\end{subfigure}
+\label{f:vpotencialu}
+\caption{Časovni razvoj valovnega paketa v harmoničnem potencialu.}
+\end{figure}
+
+Pri analitični rešitvi na levi strani (\ref{f:razvoj-ana}) vidimo, kaj bi se moglo dogajati. Potencial se premika iz desne proti levi in se na koncu odbije naza. Ves čas ohranja višino. Za razliko od tega se pa pri numerični rešitvi vipina potenciala spreminja. Opazimo lahko zmanjšanje na sredini nihaja in naraščanje na drug strani. Pozorno oko opazi, da bo imel naslednji nihaj še večjo 'luknjo' na sredini. V nadaljevanju bom večinoma opazoval absolutno vrednost $|\Psi|$.
+
+
+\subsection{Gibanje težišča}
+Prepričajmo se, da je se potencial res giblje, kot smo predvideli. Spremljal sem gibanje težišča valovnega paketa za prvih pet nihajev. 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.55\textwidth]{grafi/povprecje-t.pdf}
+\caption{Gibanje težišča valogvnega paketa po harmonskem potencialu}
+\label{f:tezisce}
+\end{figure}
+Na sliki \ref{f:tezisce} vidimo, kako se giblje težišče za obe rešitvi. Numerična rešitvev vedno bolj zamuja za analitično. 
+
+
+\subsection{Spreminjanje ploščine}
+Poglejmo si, če lahko bolj natančno opredelimo dogajanje, ki smo ga opazili kot višanje in nižanje valovnega paketa. Spremljal bom, kaj se dogaja s ploščino valovnega paketa med nihanjem (\ref{f:ploscina}). 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.55\textwidth]{grafi/ploscina-t.pdf}
+\caption{Velikost ploščine valovnega paketa v odvisnosti od časa.}
+\label{f:povrsina}
+\end{figure}
+Pri analitični rešitvi ploščina valovnega paketa ostaja enaka začetni vrednosti, pri numerični implementaciji pa ta vrednost vedno bolj izrazito niha okrog začetne vrednosti.
+
+
+\subsection{Napaka numerične metode}
+Pogledal si bom še absolutno napako numerične metode po celem območju glede na analitično rešitev.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.55\textwidth]{grafi/napaka-x.pdf}
+\caption{Napaka numerične metode za različne $N$ po enem nihaju $t=31.42$ po začetku v logaritemski skali.}
+\label{f:napaka}
+\end{figure}
+Valovni paket naj bi se nahajal na začetnem mestu pri $x = 10$. Napaka je največja pri vrhu valovnega paketa in dokaj počasi pada z manjšanjem $\Delta x$ oz. večanjem $N$.
+
+
+
+\section{Prost Gaussov valovni paket}
+V nadaljjevanju naloge pa bom raziskal še obnašanje prostega Gaussovega valovnega paketa (GVP). Kot prej sem primerjal analitično (slika \ref{f:razvoj-anabp}) z numerično rešitvijo (slika \ref{f:razvoj-numbp}).
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.495\textwidth}
+	\centering
+	\includegraphics[width=0.95\textwidth]{grafi/analiticna-casovni-bp.pdf}
+	\caption{Analitična metoda.}
+	\label{f:razvoj-anabp}
+\end{subfigure}
+\begin{subfigure}{0.495\textwidth}
+	\centering
+	\includegraphics[width=0.95\textwidth]{grafi/num-casovni-bp.pdf}
+	\caption{Numerična metoda.}
+	\label{f:razvoj-numbp}
+\end{subfigure}
+\label{f:prostgvp}
+\caption{Časovni razvoj prostega Gaussovega valovnega paketa.}
+\end{figure}
+Dogajanje je zdaj veliko bolj podobno v obeh primerih, kot je bilo v primeru s harmoničnim potencialom. Kvalitativne razlike pravzaprav niso opazne. Pri analitični in prav tako numerični rešitvi se valovni paket razširi in zniža.
+
+
+\subsection{Gibanje težišča}
+Poglejmo si, kako se giblje težišče GVP, če je v prostoru brez potenciala. 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.55\textwidth]{grafi/tezisce-prost.pdf}
+\caption{Gibanje težišča prostega Gaussovega valovnega paketa.}
+\label{f:tezisce-prost}
+\end{figure}
+Na sliki \ref{f:tezisce-prost} vidimo, da se težišče v obeh primerih giblje s konstantno hitrostjo v desno. Razlika v hitrostih je minimalna. Za drugačne $\Delta t$, bi verjetno lahko opazili večjo razliko.
+
+
+\subsection{Spreminjanje ploščine GVP}
+Opaženo nižaje in širjenje valovnega paketa poglejmo še natančneje. Spreminjanje ploščine skozi čas sem izračunal še za prost GVP.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.55\textwidth]{grafi/ploscina-prost.pdf}
+\caption{Velikost ploščine prostega Gaussovega valovnega paketa v odvisnosti od časa.}
+\label{f:ploscina-prost}
+\end{figure}
+Na sliki \ref{f:ploscina-prost} lahko vidimo, da ploščina narašča od začetka s kvadratom časa, potem pa se nekoliko upočasni razmerje postane bolj linearno. Pogledal sem si še, kaj se zgodi na koncu, saj ploščina GVP-ja ne more naraščati kar v nedogled. Izkaže se, da analitični rešitvi ploščina po $t=0.015$ strmo pade proti ničli, numerična ploščina pa se obnaša čudno in zaniha.
+
+
+\subsection{Napaka}
+Na sliki \ref{f:napaka-prost} je še absolutna napaka numerične metode za časovni razvoj prostega GVP ob času $t = 3.5\cdot10^{-3}$.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.55\textwidth]{grafi/napaka-x-prost.pdf}
+\caption{Napaka numerične metode za različne $N$ po $t = 3.5\cdot10^{-3}$ v logaritemski skali.}
+\label{f:napaka-prost}
+\end{figure}
+Napaka spet ne pada prav hitro gelde na višanje parametra $N$, lepo pa je opazno, da se končni položaj težišča (vdrtina na vrhu grafa napake) premika vedno bolj proti desni. Iz tega lahko sklepam, da se hitrost širjenja GVP vedno bolj približuje analitični.
+
+
+
+\section{Zaključek}
+Metoda je zaradi uporabe matrik dokaj počasna in natančnost ne narašča bistveno z manjšanjem koraka $\Delta x$. Verjetno bi natančnost lahko drastično izboljšali z uporabo diferenc višjih redov.
+
+
+\begin{thebibliography}{99}
+\setlength{\itemsep}{.2\itemsep}\setlength{\parsep}{.5\parsep}
+\bibitem{dijk} W. van Dijk, F. M. Toyama, Phys. Rev. E {\bf 75}, 036707 (2007).
+\end{thebibliography}
+
+
+\end{document}
